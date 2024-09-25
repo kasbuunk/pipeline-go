@@ -77,16 +77,19 @@ func stateMachine(
 	dataIn2 <-chan Input2,
 	dataOut1 chan<- Output1,
 ) {
-	select {
-	case <-ctx.Done():
-		fmt.Println("Algorithm exiting")
-	case signal := <-dataIn1:
-		newState, outSignal := transitionInput1(state, signal)
-		dataOut1 <- outSignal
-		stateMachine(ctx, newState, dataIn1, dataIn2, dataOut1)
-	case signal := <-dataIn2:
-		newState, outSignal := transitionInput2(state, signal)
-		dataOut1 <- outSignal
-		stateMachine(ctx, newState, dataIn1, dataIn2, dataOut1)
+	for {
+		select {
+		case <-ctx.Done():
+			fmt.Println("Algorithm exiting")
+			return
+		case signal := <-dataIn1:
+			newState, outSignal := transitionInput1(state, signal)
+			state = newState
+			dataOut1 <- outSignal
+		case signal := <-dataIn2:
+			newState, outSignal := transitionInput2(state, signal)
+			state = newState
+			dataOut1 <- outSignal
+		}
 	}
 }
